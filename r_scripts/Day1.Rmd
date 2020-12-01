@@ -1,0 +1,66 @@
+---
+title: "Day1 - Advent Calendar"
+author: "Anne Hoffrichter"
+date: "2020/12/01"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+data <- read.table("../data/2020_12_01-1.txt")
+data <- as.numeric(data$V1)
+```
+
+```{r, message=FALSE}
+library(purrr)
+library(dplyr)
+```
+
+## Part1
+
+```{r}
+find2020 <- function(x){
+  for(i in seq_along(x)){
+    y <- 2020-x[i]
+    if(y %in% x){
+      cat(x[i], " + ", y, " = 2020", "\n", sep="")
+      cat(x[i], " * ", y, " = ", x[i]*y,  "\n", sep="")
+      break()
+    }
+  }
+}
+
+find2020(data)
+
+```
+
+## Part2
+
+Find three numbers that add up to 2020
+
+```{r}
+mat <- sapply(data, `+`, data)
+
+find2020_triple <- function(x, mat){
+  all <- double()
+  for(i in seq_along(x)){
+    y <- 2020-x[i]
+    if(y %in% mat){
+      cat(x[i], "\n", sep="")
+      all <- c(all, x[i])
+    }
+  }
+  all
+  cat("Multiplied values: ", all[1]*all[2]*all[3], "\n", sep="")
+}
+
+find2020_triple(data, mat)
+```
+
+
+
+
+
