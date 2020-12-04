@@ -1,0 +1,161 @@
+---
+title: "Day 4 - Passport Processing"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(data.table)
+library(readr)
+library(stringr)
+library(purrr)
+library(tidyverse)
+```
+
+Has to have: 
+
+- byr (Birth Year)
+- iyr (Issue Year)
+- eyr (Expiration Year)
+- hgt (Height)
+- hcl (Hair Color)
+- ecl (Eye Color)
+- pid (Passport ID)
+- cid (Country ID) (optional)
+
+```{r}
+data <- read_file("../data/Day4.txt")
+data <- str_split(data, "\n\n")
+data <- as.list(data[[1]])
+data <- map(data, str_split, "\n", simplify=TRUE)
+data <- map(data, strsplit, " ")
+data <- lapply(data, unlist)
+```
+
+```{r}
+fields_obligatory <- c("byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid")
+count <- map(data, ~str_count(.x,paste(fields_obligatory, collapse='|')))
+count2 <- map(count, sum)
+
+data2 <- list()
+valid_counter <- 0
+for(i in seq_along(count2)){
+  if(count2[[i]]==7){
+    valid_counter <- valid_counter+1
+    data2[[valid_counter]] <- data[[i]]
+  }
+}
+valid_counter
+```
+
+## Part 2
+
+```{r}
+data2 <- map(data2, str_split, ":")
+```
+
+```{r}
+value <- map(data2, ~map(.x, 2) %>% unlist())
+names <- map(data2, ~map(.x,1) %>%  unlist())
+named_values <- map2(value, names, ~`names<-`(.x,.y))
+```
+
+```{r}
+data2 <- bind_rows(named_values)
+```
+
+```{r}
+rm(list=setdiff(ls(), "data2"))
+```
+
+
+
+Conditions to test: 
+
+- iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+
+```{r}
+data2$iyr <- as.integer(data2$iyr)
+validation <- data.frame(iyr=data2$iyr>=2010 & data2$iyr<=2020)
+```
+
+- ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+
+```{r}
+ecl <- c("amb", "blu", "brn", "gry", "grn", "hzl", "oth")
+validation$ecl <- data2$ecl %in% ecl
+```
+
+- hgt (Height) - a number followed by either cm or in:
+  - If cm, the number must be at least 150 and at most 193.
+  - If in, the number must be at least 59 and at most 76.
+  
+```{r}
+data2$height_num <- gsub("[^[:digit:]]", "", data2$hgt) %>% as.integer()
+data2$height_unit <- gsub("[[:digit:]]", "", data2$hgt) 
+
+
+for(i in seq_along(data2$height_unit)){
+  validation$hgt[i] <- if(data2$height_unit[i]=="cm"){
+    data2$height_num[i]>=150 & data2$height_num[i]<=193
+  }else{
+    data2$height_num[i]>=59 & data2$height_num[i]<=76
+  }
+}  
+```
+  
+- pid (Passport ID) - a nine-digit number, including leading zeroes.
+
+```{r}
+validation$pid <- map_lgl(data2$pid, ~str_count(.x, paste(0:9, collapse='|'))==9)
+```
+
+- byr (Birth Year) - four digits; at least 1920 and at most 2002.
+
+```{r}
+data2$byr <- as.integer(data2$byr)
+validation$byr <- data2$byr>=1920 & data2$byr<=2002
+```
+
+- hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+
+```{r}
+
+x <- logical()
+for(i in seq_along(data2$hcl)){
+    if(substr(data2$hcl[i], 1,1)=="#"){
+  x[i] <- nchar(substr(data2$hcl[i], 2,7))==6 & str_count(substr(data2$hcl[i], 2,7), paste(c(letters, 0:9), collapse = '|'))==6
+} else x[i] <- FALSE
+  }
+  
+validation$hcl <- x
+```
+
+- eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+
+```{r}
+data2$eyr <- as.integer(data2$eyr)
+validation$eyr <- data2$eyr>=2020 & data2$eyr<=2030
+```
+
+- cid (Country ID) - ignored, missing or not.
+
+```{r}
+y <- logical()
+
+for(i in 1:nrow(validation)){
+   x <- as.logical(validation[i,]) %>% all()
+   y <- c(y,x)
+}
+
+validation$all_TRUE <- y
+table(y)
+```
+
+
+
+
+
