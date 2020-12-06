@@ -1,0 +1,105 @@
+---
+title: "Day3"
+author: "Anne Hoffrichter"
+date: "2020/12/03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part 1
+```{r, message=FALSE}
+library(data.table)
+library(purrr)
+library(stringr)
+library(tidyverse)
+```
+
+
+```{r}
+data <- fread("../data/Day3.txt", header = F)
+data2 <- str_split(data$V1, "")
+data3 <- do.call(rbind.data.frame, data2)
+
+tree_counter <- 0
+pos_counter <- 4
+
+for(i in c(2:(nrow(data3)))){
+  if(data3[i, pos_counter]=="#"){
+    tree_counter <- tree_counter+1
+    
+  }
+  pos_counter <- pos_counter+3
+  if(pos_counter>ncol(data3)){
+    pos_counter <- pos_counter-ncol(data3)
+  }
+  if(i==nrow(data3)){
+    cat("You will encounter ", tree_counter, " trees on your way down.", "\n", sep="")
+  }
+  
+}
+
+```
+
+## Part2 
+
+I can make a function out of the above for always going down one, and supply the increase to the rigtht.
+
+```{r}
+tree_encounter <- function(data, increase){
+  pos_counter <- increase+1
+  tree_counter <- 0
+for(i in c(2:(nrow(data3)))){
+  if(data3[i, pos_counter]=="#"){
+    tree_counter <- tree_counter+1
+    
+  }
+    pos_counter <- pos_counter+increase
+    if(pos_counter>ncol(data3)){
+      pos_counter <- pos_counter-ncol(data3)
+    }
+  }
+cat("Going down one and right ", increase, " you will encounter ", tree_counter, " trees on your way down.", "\n", sep="")
+invisible(tree_counter)
+}
+```
+
+```{r}
+increase <- c(1,3,5,7)
+down1 <- map_dbl(increase, ~tree_encounter(data3, .x))
+```
+
+For going down two, I have to change the function a bit
+
+```{r}
+tree_encounter_down2 <- function(data, increase){
+  pos_counter <- increase+1
+  tree_counter <- 0
+for(i in c(3:(nrow(data3)))){
+  if(i%%2==1){
+    if(data3[i, pos_counter]=="#"){
+    tree_counter <- tree_counter+1
+    
+    }
+    pos_counter <- pos_counter+increase
+  }
+  if(pos_counter>ncol(data3)){
+    pos_counter <- pos_counter-ncol(data3)
+  }
+}
+ cat("Going down two and right ", increase, " you will encounter ", tree_counter, " trees on your way down.", "\n", sep="") 
+ invisible(tree_counter)
+}
+```
+
+```{r}
+down2 <- tree_encounter_down2(data3, 1)
+```
+
+```{r}
+reduce(down1, `*`)*down2
+```
+
+

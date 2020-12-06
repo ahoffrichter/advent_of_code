@@ -1,0 +1,46 @@
+---
+title: "Day6 - Custom Customs"
+author: "Anne Hoffrichter"
+date: "2020/12/06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message=FALSE}
+library(readr)
+library(stringr)
+library(purrr)
+library(tidyverse)
+```
+
+# Part 1
+
+```{r}
+data <- read_file("../data/Day6.txt")
+data <- str_split(data, "\n\n")
+# data <- as.list(data[[1]])
+data <- map(data, strsplit, "")
+data <- map(data[[1]], unique)
+data <- map(data, ~.x[.x!="\n"])
+data %>% map_int(length) %>% sum()
+```
+
+# Part 2
+
+```{r}
+data <- read_file("../data/Day6.txt")
+data <- str_split(data, "\n\n")
+data1 <- map(data, str_split, "\n")
+people_per_group <- map(data1[[1]], length) # count of people per group
+
+data2 <- map(data, strsplit, "") # combining all answers into one character vector
+data2 <- map(data2[[1]], ~.x[.x!="\n"]) # removing new lines
+
+
+count <- map2(data2, people_per_group, ~as.integer(table(.x)==.y) %>% sum()) # counting occurence per letter & comparing to number of people per group, if the same all people answered yes to that question. 
+sum(unlist(count))
+```
+

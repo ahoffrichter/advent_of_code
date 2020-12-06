@@ -1,0 +1,121 @@
+---
+title: "Day5 - Binary Boarding"
+author: "Anne Hoffrichter"
+date: "2020/12/05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Part1
+
+```{r, message=FALSE}
+library(purrr)
+library(stringr)
+library(tidyverse)
+```
+
+
+```{r}
+data <- read.table("Day5.txt")
+```
+
+```{r}
+data2 <- map(data, str_split, "")
+# data2 <- data.frame(matrix(unlist(data2), nrow=757, byrow=T),stringsAsFactors=FALSE)
+```
+
+There are rows 0 to 127. if the first character is F the seat is between 0 and 63, if it's B the seat is between 64 and 127
+
+```{r}
+
+decoder <- function(x){
+  if(x[1]=="F"){
+    seat <- 0
+  }else{
+    seat <- 64
+  }
+  if(x[2]=="F"){
+    seat <- seat+0
+  }else{
+    seat <- seat+32
+  }
+  if(x[3]=="F"){
+    seat <- seat+0
+  }else{
+    seat <- seat+16
+  }
+  if(x[4]=="F"){
+    seat <- seat+0
+  }else{
+    seat <- seat+8
+  }
+  if(x[5]=="F"){
+    seat <- seat+0
+  }else{
+    seat <- seat+4
+  }
+  if(x[6]=="F"){
+    seat <- seat+0
+  }else{
+    seat <- seat+2
+  }
+  if(x[7]=="F"){
+    seat <- seat+0
+  }else{
+    seat <- seat+1
+  }
+  
+  if(x[8]=="L"){
+    column <- 0
+  }else{
+    column <- 4
+  }
+  if(x[9]=="L"){
+    column <- column+0
+  }else{
+    column <- column+2
+  }
+  if(x[10]=="L"){
+    column <- column+0
+  }else{
+    column <- column+1
+  }
+  c(seat,column, seat*8+column)
+  
+}
+
+decoder(data2[1,])
+
+seats <- map(data2$V1, decoder)
+seats <- data.frame(matrix(unlist(seats), nrow=757, byrow=T),stringsAsFactors=FALSE)
+max(seats$X3)
+```
+
+## Part2
+
+
+```{r}
+seat_IDs <- sort(seats$X3)
+seats_total <- 49:806
+
+same <- seat_IDs==seats_total
+
+(seat_IDs[(which(!same)[1]-1)]+seat_IDs[(which(!same)[1])])/2
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
